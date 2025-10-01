@@ -12,4 +12,4 @@ Process and problem statment
 4. sizes regime-aware hedges to meet a CFaR target;
 5. decomposes risk by driver (price, basis, FX, freight);
 6. runs stress & liquidity tests;
-7. reports unhedged vs hedged outcomes in clear, producer-friendly terms.
+7. reports unhedged vs hedged outcomes
