@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commodity Risk Engine - Monte Carlo VaR &amp; ES</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Commodity Risk Engine</h1>
+            <p class="subtitle">Monte Carlo Simulation with Price, Basis, FX &amp; Freight Risk Factors</p>
+        </header>
+
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="portfolio">Portfolio Configuration</button>
+            <button class="tab-btn" data-tab="risk-factors">Risk Factors</button>
+            <button class="tab-btn" data-tab="simulation">Monte Carlo Simulation</button>
+            <button class="tab-btn" data-tab="results">Results Dashboard</button>
+            <button class="tab-btn" data-tab="hedging">Hedging Optimization</button>
+            <button class="tab-btn" data-tab="stress">Stress Testing</button>
+            <button class="tab-btn" data-tab="decomposition">Risk Decomposition</button>
+        </nav>
+
+        <main class="content">
+            <!-- Portfolio Configuration Tab -->
+            <section id="portfolio-tab" class="tab-content active">
+                <h2>Portfolio Configuration</h2>
+                <div class="grid-2">
+                    <div class="card">
+                        <h3>Commodity Exposures</h3>
+                        <div class="form-group">
+                            <label class="form-label">Corn (ZC)</label>
+                            <div class="input-group">
+                                <input type="number" id="corn-qty" class="form-control" value="1000000" step="1000">
+                                <span class="input-suffix">bushels</span>
+                            </div>
+                            <div class="input-group">
+                                <input type="number" id="corn-price" class="form-control" value="4.50" step="0.01">
+                                <span class="input-suffix">$/bu</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Soybeans (ZS)</label>
+                            <div class="input-group">
+                                <input type="number" id="soy-qty" class="form-control" value="600000" step="1000">
+                                <span class="input-suffix">bushels</span>
+                            </div>
+                            <div class="input-group">
+                                <input type="number" id="soy-price" class="form-control" value="11.50" step="0.01">
+                                <span class="input-suffix">$/bu</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Wheat (ZW)</label>
+                            <div class="input-group">
+                                <input type="number" id="wheat-qty" class="form-control" value="800000" step="1000">
+                                <span class="input-suffix">bushels</span>
+                            </div>
+                            <div class="input-group">
+                                <input type="number" id="wheat-price" class="form-control" value="5.50" step="0.01">
+                                <span class="input-suffix">$/bu</span>
+                            </div>
+                        </div>
+                        <button class="btn btn--primary" onclick="app.updatePortfolio()">Update Portfolio</button>
+                    </div>
+                    <div>
+                        <div class="card">
+                            <h3>Portfolio Summary</h3>
+                            <div class="metric-card">
+                                <div class="metric-label">Total Portfolio Value</div>
+                                <div class="metric-value" id="total-value">$14,800,000</div>
+                            </div>
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-label">Corn Exposure</div>
+                                    <div class="metric-value small" id="corn-value">$4.50M</div>
+                                    <div class="metric-percent" id="corn-pct">30.4%</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Soybeans Exposure</div>
+                                    <div class="metric-value small" id="soy-value">$6.90M</div>
+                                    <div class="metric-percent" id="soy-pct">46.6%</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Wheat Exposure</div>
+                                    <div class="metric-value small" id="wheat-value">$4.40M</div>
+                                    <div class="metric-percent" id="wheat-pct">29.7%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <canvas id="portfolio-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Risk Factors Tab -->
+            <section id="risk-factors-tab" class="tab-content">
+                <h2>Risk Factors Configuration</h2>
+                <div class="grid-2">
+                    <!-- Price Risk -->
+                    <div class="card risk-factor-card">
+                        <div class="card-header">
+                            <h3>Price Risk</h3>
+                            <label class="toggle">
+                                <input type="checkbox" id="price-enabled" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="card-body" id="price-config">
+                            <p class="help-text">Commodity price volatility affects revenue. Uses futures prices as benchmark.</p>
+                            <div class="form-group">
+                                <label class="form-label">Annualized Volatility</label>
+                                <input type="number" id="price-vol" class="form-control" value="18" step="0.1">
+                                <span class="input-suffix">%</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Correlation Matrix</label>
+                                <div class="correlation-inputs">
+                                    <div class="input-group">
+                                        <label>Corn-Soybeans:</label>
+                                        <input type="number" id="corr-corn-soy" class="form-control" value="0.47" step="0.01" min="-1" max="1">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Corn-Wheat:</label>
+                                        <input type="number" id="corr-corn-wheat" class="form-control" value="0.37" step="0.01" min="-1" max="1">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Soybeans-Wheat:</label>
+                                        <input type="number" id="corr-soy-wheat" class="form-control" value="0.41" step="0.01" min="-1" max="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basis Risk -->
+                    <div class="card risk-factor-card">
+                        <div class="card-header">
+                            <h3>Basis Risk (Cash-Futures Spread)</h3>
+                            <label class="toggle">
+                                <input type="checkbox" id="basis-enabled" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="card-body" id="basis-config">
+                            <p class="help-text">Basis = Local Cash Price - Futures Price. Can widen unexpectedly due to local supply/demand.</p>
+                            <div class="form-group">
+                                <label class="form-label">Basis Volatility</label>
+                                <input type="number" id="basis-vol" class="form-control" value="5" step="0.1">
+                                <span class="input-suffix">%</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Correlation with Price</label>
+                                <input type="number" id="basis-corr" class="form-control" value="0.3" step="0.01" min="-1" max="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Mean Basis (cents/bu)</label>
+                                <div class="input-group">
+                                    <label>Corn:</label>
+                                    <input type="number" id="basis-corn" class="form-control" value="-5" step="0.1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Soybeans:</label>
+                                    <input type="number" id="basis-soy" class="form-control" value="-8" step="0.1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Wheat:</label>
+                                    <input type="number" id="basis-wheat" class="form-control" value="-6" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FX Risk -->
+                    <div class="card risk-factor-card">
+                        <div class="card-header">
+                            <h3>FX Risk (Foreign Exchange)</h3>
+                            <label class="toggle">
+                                <input type="checkbox" id="fx-enabled" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="card-body" id="fx-config">
+                            <p class="help-text">Exchange rate changes impact revenue when selling in foreign currency or with foreign costs.</p>
+                            <div class="form-group">
+                                <label class="form-label">Currency Pair</label>
+                                <select id="fx-pair" class="form-control">
+                                    <option value="USD/BRL" selected>USD/BRL (Brazilian Real)</option>
+                                    <option value="USD/CAD">USD/CAD (Canadian Dollar)</option>
+                                    <option value="USD/INR">USD/INR (Indian Rupee)</option>
+                                    <option value="EUR/USD">EUR/USD (Euro)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Current Exchange Rate</label>
+                                <input type="number" id="fx-rate" class="form-control" value="5.20" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">FX Volatility</label>
+                                <input type="number" id="fx-vol" class="form-control" value="15" step="0.1">
+                                <span class="input-suffix">%</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Correlation with Commodity Prices</label>
+                                <input type="number" id="fx-corr" class="form-control" value="-0.20" step="0.01" min="-1" max="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Freight Risk -->
+                    <div class="card risk-factor-card">
+                        <div class="card-header">
+                            <h3>Freight Risk (Transportation Costs)</h3>
+                            <label class="toggle">
+                                <input type="checkbox" id="freight-enabled" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="card-body" id="freight-config">
+                            <p class="help-text">Transportation costs (Baltic Dry Index) reduce net price received. Highly volatile.</p>
+                            <div class="form-group">
+                                <label class="form-label">Freight Cost per Bushel</label>
+                                <input type="number" id="freight-cost" class="form-control" value="0.50" step="0.01">
+                                <span class="input-suffix">$/bu</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Freight Volatility (Baltic Dry Index)</label>
+                                <input type="number" id="freight-vol" class="form-control" value="35" step="0.1">
+                                <span class="input-suffix">%</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Correlation with Commodity Prices</label>
+                                <input type="number" id="freight-corr" class="form-control" value="0.25" step="0.01" min="-1" max="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Monte Carlo Simulation Tab -->
+            <section id="simulation-tab" class="tab-content">
+                <h2>Monte Carlo Simulation</h2>
+                <div class="grid-2">
+                    <div class="card">
+                        <h3>Simulation Parameters</h3>
+                        <div class="form-group">
+                            <label class="form-label">Number of Scenarios</label>
+                            <input type="number" id="num-scenarios" class="form-control" value="25000" step="1000" min="1000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Time Horizon (days)</label>
+                            <input type="number" id="time-horizon" class="form-control" value="20" step="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Distribution</label>
+                            <select id="distribution" class="form-control">
+                                <option value="student_t" selected>Student-t (Fat Tails)</option>
+                                <option value="normal">Normal</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="df-group">
+                            <label class="form-label">Degrees of Freedom (t-distribution)</label>
+                            <input type="number" id="degrees-freedom" class="form-control" value="6" step="1" min="3">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confidence Levels</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" id="conf-95" checked> 95%</label>
+                                <label><input type="checkbox" id="conf-99" checked> 99%</label>
+                            </div>
+                        </div>
+                        <button class="btn btn--primary btn--lg" onclick="app.runSimulation()" id="run-btn">
+                            <span id="btn-text">Run Simulation</span>
+                            <span id="btn-loading" class="hidden">Running...</span>
+                        </button>
+                    </div>
+                    <div class="card">
+                        <h3>Risk Factors Status</h3>
+                        <div class="status-list" id="risk-status">
+                            <div class="status-item">
+                                <span class="status status--success">Enabled</span>
+                                <strong>Price Risk:</strong> 18% annualized volatility
+                            </div>
+                            <div class="status-item">
+                                <span class="status status--success">Enabled</span>
+                                <strong>Basis Risk:</strong> 5% volatility, 0.3 correlation
+                            </div>
+                            <div class="status-item">
+                                <span class="status status--success">Enabled</span>
+                                <strong>FX Risk:</strong> USD/BRL at 5.20, 15% volatility
+                            </div>
+                            <div class="status-item">
+                                <span class="status status--success">Enabled</span>
+                                <strong>Freight Risk:</strong> $0.50/bu, 35% volatility
+                            </div>
+                        </div>
+                        <div class="info-box">
+                            <h4>Simulation Methodology</h4>
+                            <p>The Monte Carlo engine generates correlated random returns for all risk factors using Cholesky decomposition. For each scenario:</p>
+                            <ol>
+                                <li>Generate correlated price changes</li>
+                                <li>Apply basis adjustments to effective prices</li>
+                                <li>Convert to foreign currency if FX enabled</li>
+                                <li>Deduct freight costs</li>
+                                <li>Calculate total P&amp;L</li>
+                            </ol>
+                            <p><strong>VaR</strong> = Maximum expected loss at confidence level<br>
+                            <strong>ES</strong> = Average loss in worst-case scenarios beyond VaR</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Dashboard Tab -->
+            <section id="results-tab" class="tab-content">
+                <h2>Results Dashboard</h2>
+                <div id="results-content" class="results-placeholder">
+                    <p>Run a simulation to see results</p>
+                </div>
+            </section>
+
+            <!-- Hedging Optimization Tab -->
+            <section id="hedging-tab" class="tab-content">
+                <h2>Hedging Optimization</h2>
+                <div id="hedging-content" class="results-placeholder">
+                    <p>Run a simulation first to calculate optimal hedge ratios</p>
+                </div>
+            </section>
+
+            <!-- Stress Testing Tab -->
+            <section id="stress-tab" class="tab-content">
+                <h2>Stress Testing</h2>
+                <div class="card">
+                    <h3>Predefined Stress Scenarios</h3>
+                    <div class="stress-scenarios">
+                        <div class="stress-card" onclick="app.runStressTest(0)">
+                            <h4>Moderate Downturn</h4>
+                            <p>Price: -20%, Basis: +10%, FX: +5%, Freight: +15%</p>
+                            <div class="stress-result" id="stress-result-0"></div>
+                        </div>
+                        <div class="stress-card" onclick="app.runStressTest(1)">
+                            <h4>Severe Crisis</h4>
+                            <p>Price: -40%, Basis: +20%, FX: +10%, Freight: +30%</p>
+                            <div class="stress-result" id="stress-result-1"></div>
+                        </div>
+                        <div class="stress-card" onclick="app.runStressTest(2)">
+                            <h4>Perfect Storm</h4>
+                            <p>Price: -30%, Basis: +25%, FX: +15%, Freight: +40%</p>
+                            <div class="stress-result" id="stress-result-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Custom Stress Scenario</h3>
+                    <div class="custom-stress">
+                        <div class="form-group">
+                            <label class="form-label">Price Shock (%)</label>
+                            <input type="range" id="custom-price" class="slider" min="-50" max="50" value="0" step="1">
+                            <span id="custom-price-val">0%</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Basis Shock (%)</label>
+                            <input type="range" id="custom-basis" class="slider" min="-50" max="50" value="0" step="1">
+                            <span id="custom-basis-val">0%</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">FX Shock (%)</label>
+                            <input type="range" id="custom-fx" class="slider" min="-50" max="50" value="0" step="1">
+                            <span id="custom-fx-val">0%</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Freight Shock (%)</label>
+                            <input type="range" id="custom-freight" class="slider" min="-50" max="50" value="0" step="1">
+                            <span id="custom-freight-val">0%</span>
+                        </div>
+                        <button class="btn btn--primary" onclick="app.runCustomStress()">Run Custom Scenario</button>
+                        <div class="stress-result" id="custom-stress-result"></div>
+                    </div>
+                </div>
+                <div class="card chart-card" id="stress-chart-container" style="display: none;">
+                    <canvas id="stress-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Risk Decomposition Tab -->
+            <section id="decomposition-tab" class="tab-content">
+                <h2>Risk Decomposition</h2>
+                <div id="decomposition-content" class="results-placeholder">
+                    <p>Run a simulation to see risk decomposition analysis</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
