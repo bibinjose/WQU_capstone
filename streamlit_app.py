@@ -8,6 +8,8 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="Commodity Risk Engine", layout="wide")
 st.title("Commodity Risk Engine")
 st.caption("Monte Carlo VaR & ES with Price, Basis, FX & Freight risk (Plotly + caching)")
+st.caption("Student Group 11203 — Bibin Jose, Nicolas Vidal, Freddy Kuriakose")
+
 
 # -------- Helpers --------
 def format_currency(x, short=False):
