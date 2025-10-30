@@ -42,5 +42,8 @@ We run different stress test: Historical, Multisigma Shortfall, and other fundam
 We show distributions from P&L, Var/ES/CFaR, stress tables and risk drivers in hedge and unhedge porfolios
 
 
+## Demo App
+https://wqucapstone-commodity-risk.streamlit.app/
+
 
 
