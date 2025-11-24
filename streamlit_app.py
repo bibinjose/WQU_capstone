@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 # -----------------------------
 st.set_page_config(page_title="Commodity Risk Engine", layout="wide")
 st.title("Commodity Risk Engine")
+st.caption(" Student Group 11203-Bibin Jose,Nicolas Vidal,Freddy Kuriakose")
 st.caption("Monte Carlo VaR & ES with Price, Basis, FX & Freight risk")
 
 # -----------------------------
