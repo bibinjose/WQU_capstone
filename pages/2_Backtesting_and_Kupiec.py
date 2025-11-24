@@ -7,6 +7,7 @@ import matplotlib.dates as mdates
 st.set_page_config(page_title="Backtesting & Kupiec", layout="wide")
 st.title("Backtesting & Kupiec Test")
 st.caption("Rolling historical VaR on futures P&L proxy, plus Kupiec proportion-of-failures test.")
+st.caption(" Student Group 11203-Bibin Jose,Nicolas Vidal,Freddy Kuriakose")
 
 with st.sidebar:
     years = st.slider("Lookback (years)", 3, 12, 5)
@@ -86,3 +87,4 @@ try:
         st.warning("Not enough data for the selected window.")
 except Exception as e:
     st.warning(f"Backtest unavailable ({e}). Install yfinance and ensure internet.")
+
