@@ -4,6 +4,7 @@ import numpy as np
 st.set_page_config(page_title="Hedge Optimizer (Integer)", layout="wide")
 st.title("Hedge Optimizer (Integer contracts)")
 st.caption("Minimize ES(97.5%) across integer futures contracts using your current parameters.")
+st.caption(" Student Group 11203-Bibin Jose,Nicolas Vidal,Freddy Kuriakose")
 
 if "results" not in st.session_state:
     st.info("Run a simulation on the main page first so we can reuse parameters.")
@@ -38,3 +39,4 @@ else:
         if best:
             st.success(f"Optimal ≈ Corn {best[0]}, Soy {best[1]}, Wheat {best[2]}  →  ES97.5 ≈ ${best_es:,.0f}")
             st.session_state["optimizer_best"] = dict(corn=best[0], soybeans=best[1], wheat=best[2], es975=best_es)
+
