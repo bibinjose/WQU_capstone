@@ -5,14 +5,7 @@ import numpy as np
 st.set_page_config(page_title="Historical Calibration", layout="wide")
 st.title("Historical Calibration")
 st.caption("Pull futures history via Yahoo Finance to suggest vols, correlations, and Student-t df.")
-# --- Student group footer ---
-st.markdown("""
----
-### Student Group 11203
-- **Bibin Jose**  
-- **Nicolas Vidal**  
-- **Freddy Kuriakose**
-""")
+st.caption(" Student Group 11203-Bibin Jose,Nicolas Vidal,Freddy Kuriakose")
 
 
 with st.sidebar:
@@ -72,4 +65,5 @@ try:
         st.success("Applied. Go to the main app → Risk Factors.")
 except Exception as e:
     st.warning(f"Historical download unavailable ({e}). Install yfinance and ensure internet.")
+
 
